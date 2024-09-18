@@ -19,6 +19,25 @@ renderer.setSize( window.innerWidth, window.innerHeight );
 
 const controls = new OrbitControls( camera, renderer.domElement );
 
+// Patio was 228-1/4" across, measured via tape measure.
+// 139" from the floor of the patio to the top of the concrete.
+// At the back wall, at ground level, it's currently 28-29" from the ground to the top of the concrete.
+
+const patioWidth = 19.0208333;
+const wallThickness = 1; // For both the floor and the walls
+const patioHeight = 11.583333;
+
+const patioDepth = 18;  // Not actually measured
+
+// Stair treads are each 1' deep
+// Designed to have 18 risers, 16 treads
+// Each is about 7.72222" high
+const treadDepth = 1;
+const stairRise = 7.72222 / 12.0;
+const stairWidth = 3;
+
+const planterDepth = 1;
+
 function makeCube( size, position ) {
   const geometry = new THREE.BoxGeometry( size.x, size.y, size.z );
   const cube = new THREE.Mesh( geometry, material );
@@ -26,34 +45,50 @@ function makeCube( size, position ) {
   return cube;
 }
 
-// 19' 8 1/2" x 1' x 18'
-const floorWidth = 19.708333;
-const floorThickness = 1; // For both the floor and walls
-const floorDepth = 18;
+function buildStair( scene, height, horizOffset ) {
+  const verticalFace = makeCube(new THREE.Vector3(treadDepth, height - wallThickness, wallThickness),
+                                new THREE.Vector3(treadDepth / 2 + horizOffset, (height - wallThickness) / 2, wallThickness / 2 + planterDepth));
+  const tread = makeCube(new THREE.Vector3(treadDepth, wallThickness, stairWidth),
+                         new THREE.Vector3(treadDepth / 2 + horizOffset, height - (wallThickness / 2), treadDepth / 2 + planterDepth + wallThickness));
+  scene.add(verticalFace);
+  scene.add(tread);
+}
 
-const wallHeight = 10;
 
 function buildPatio() {
-  // Origin is at the top left corner of the patio, floor level, when viewed top down on Chad's plans
+  // Origin is at the back bottom left corner of the patio when viewed top down on Chad's plans
   // Measurements are in fractional feet
 
   const light = new THREE.PointLight( 0xffffff, 30, 0 );
-  light.position.set(floorWidth / 2, wallHeight / 2, -floorDepth / 4);
+  light.position.set(patioWidth / 2, patioHeight / 2, -patioDepth / 4);
   scene.add(light);
   
   // Floor
-  scene.add(makeCube(new THREE.Vector3(floorWidth, floorThickness, floorDepth), new THREE.Vector3(floorWidth / 2, -floorThickness / 2, -floorDepth / 2)));
+  // Bump it out to meet the walls at more than just an edge
+  scene.add(makeCube(new THREE.Vector3(patioWidth + 2 * wallThickness, wallThickness, patioDepth + wallThickness),
+                     new THREE.Vector3(patioWidth / 2, -wallThickness / 2, patioDepth / 2 - wallThickness / 2)));
 
   // Left wall
-  scene.add(makeCube(new THREE.Vector3(floorThickness, wallHeight, floorDepth), new THREE.Vector3(-floorThickness / 2, wallHeight / 2, -floorDepth / 2)));
+  scene.add(makeCube(new THREE.Vector3(wallThickness, patioHeight, patioDepth),
+                     new THREE.Vector3(-wallThickness / 2, patioHeight / 2, patioDepth / 2)));
 
   // Right wall
-  scene.add(makeCube(new THREE.Vector3(floorThickness, wallHeight, floorDepth), new THREE.Vector3(floorWidth + floorThickness / 2, wallHeight / 2, -floorDepth / 2)));
+  scene.add(makeCube(new THREE.Vector3(wallThickness, patioHeight, patioDepth),
+                     new THREE.Vector3(patioWidth + wallThickness / 2, patioHeight / 2, patioDepth / 2)));
 
   // Back wall
-  scene.add(makeCube(new THREE.Vector3(floorWidth, wallHeight, floorThickness), new THREE.Vector3(floorWidth / 2, wallHeight / 2, -floorDepth)));
+  // Bump it out edge to edge
+  scene.add(makeCube(new THREE.Vector3(patioWidth + 2 * wallThickness, patioHeight, wallThickness),
+                     new THREE.Vector3(patioWidth / 2, patioHeight / 2, -wallThickness / 2)));
 
   // Now do the stairs...
+  let horizOffset = 0;
+  let curStairHeight = patioHeight;
+  for (let ii = 0; ii < 18; ++ii) {
+    buildStair(scene, curStairHeight, horizOffset);
+    curStairHeight -= stairRise;
+    horizOffset += treadDepth;
+  }
 }
 
 
@@ -68,7 +103,7 @@ function buildPatio() {
 buildPatio();
 
 
-camera.position.x = floorWidth / 2;
+camera.position.x = patioWidth / 2;
 camera.position.z = 50;
 controls.update();
 
