@@ -23,18 +23,25 @@ const controls = new OrbitControls( camera, renderer.domElement );
 // 139" from the floor of the patio to the top of the concrete.
 // At the back wall, at ground level, it's currently 28-29" from the ground to the top of the concrete.
 
-const patioWidth = 19.0208333;
+function InchesToFeet( inches ) {
+  return inches / 12.0;
+}
+
+const patioWidth = InchesToFeet( 228.25 );
 const wallThickness = 1; // For both the floor and the walls
-const patioHeight = 11.583333;
+const patioHeight = InchesToFeet( 139 );
 
 const patioDepth = 18;  // Not actually measured
 
-// Stair treads are each 1' deep
+// Stair treads are each 1' in "width"
 // Designed to have 18 risers, 16 treads
-// Each is about 7.72222" high
-const treadDepth = 1;
-const stairRise = 7.72222 / 12.0;
-const stairWidth = 3;
+// Each tread is 4-5" thick
+// Treads are spaced 7-3/4" max, vertically
+
+const treadWidth = 1;
+const treadThickness = InchesToFeet(4);
+const stairRise = InchesToFeet(7.75);
+const stairWidth = InchesToFeet(35);
 
 const planterDepth = 1;
 
@@ -46,10 +53,10 @@ function makeCube( size, position ) {
 }
 
 function buildStair( scene, height, horizOffset ) {
-  const verticalFace = makeCube(new THREE.Vector3(treadDepth, height - wallThickness, wallThickness),
-                                new THREE.Vector3(treadDepth / 2 + horizOffset, (height - wallThickness) / 2, wallThickness / 2 + planterDepth));
-  const tread = makeCube(new THREE.Vector3(treadDepth, wallThickness, stairWidth),
-                         new THREE.Vector3(treadDepth / 2 + horizOffset, height - (wallThickness / 2), treadDepth / 2 + planterDepth + wallThickness));
+  const verticalFace = makeCube(new THREE.Vector3(treadWidth, height - treadThickness, wallThickness),
+                                new THREE.Vector3(treadWidth / 2 + horizOffset, (height - treadThickness) / 2, wallThickness / 2 + planterDepth));
+  const tread = makeCube(new THREE.Vector3(treadWidth, treadThickness, stairWidth),
+                         new THREE.Vector3(treadWidth / 2 + horizOffset, height - (treadThickness / 2), stairWidth / 2 + planterDepth));
   scene.add(verticalFace);
   scene.add(tread);
 }
@@ -87,7 +94,7 @@ function buildPatio() {
   for (let ii = 0; ii < 18; ++ii) {
     buildStair(scene, curStairHeight, horizOffset);
     curStairHeight -= stairRise;
-    horizOffset += treadDepth;
+    horizOffset += treadWidth;
   }
 }
 
